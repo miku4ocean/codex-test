@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slide Capture Assistant</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>Slide Capture</h1>
+    <div class="actions">
+      <button id="select">1) 選取截圖與下一頁區域</button>
+      <button id="start">2) 開始截圖</button>
+      <button id="stop">停止並下載 PDF</button>
+    </div>
+
+    <div class="fields">
+      <label>
+        翻頁後等待秒數
+        <input type="number" id="wait-click" min="0" step="0.5" value="3" />
+      </label>
+      <label>
+        截圖後等待秒數
+        <input type="number" id="wait-shot" min="0" step="0.5" value="3" />
+      </label>
+    </div>
+
+    <div class="status">
+      <p>狀態：<span id="status">idle</span></p>
+      <p>已截圖頁數：<span id="count">0</span></p>
+      <p class="hint">請把簡報頁切到前景並保持可見。</p>
+    </div>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
