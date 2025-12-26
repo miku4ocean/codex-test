@@ -16,6 +16,7 @@ async function selectAreas() {
     type: 'saveSelection',
     captureRegion: coords.captureRegion,
     nextButtonRect: coords.nextButtonRect,
+    devicePixelRatio: coords.devicePixelRatio,
     waitAfterClickMs: Number(waitClickEl.value) * 1000,
     waitAfterScreenshotMs: Number(waitShotEl.value) * 1000
   });

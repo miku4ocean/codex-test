@@ -2,6 +2,7 @@ const STATE = {
   capturing: false,
   captureRegion: null,
   nextButtonRect: null,
+  devicePixelRatio: 1,
   waitAfterClickMs: 3000,
   waitAfterScreenshotMs: 3000,
   images: []
@@ -13,19 +14,26 @@ function delay(ms) {
 
 async function cropImage(dataUrl, region) {
   if (!region) return dataUrl;
+  const scale = STATE.devicePixelRatio || 1;
+  const scaled = {
+    x: Math.round(region.x * scale),
+    y: Math.round(region.y * scale),
+    width: Math.round(region.width * scale),
+    height: Math.round(region.height * scale)
+  };
   const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
-  const canvas = new OffscreenCanvas(region.width, region.height);
+  const canvas = new OffscreenCanvas(scaled.width, scaled.height);
   const ctx = canvas.getContext('2d');
   ctx.drawImage(
     bitmap,
-    region.x,
-    region.y,
-    region.width,
-    region.height,
+    scaled.x,
+    scaled.y,
+    scaled.width,
+    scaled.height,
     0,
     0,
-    region.width,
-    region.height
+    scaled.width,
+    scaled.height
   );
   const blob = await canvas.convertToBlob({ type: 'image/png' });
   return await new Promise((resolve) => {
@@ -41,11 +49,13 @@ async function performClick(tabId) {
 }
 
 async function captureStep(tabId) {
+  if (!STATE.capturing) return false;
   const clickOk = await performClick(tabId);
   if (!clickOk) {
     return false;
   }
   await delay(STATE.waitAfterClickMs);
+  if (!STATE.capturing) return false;
   const shot = await chrome.tabs.captureVisibleTab({ format: 'png' });
   const cropped = await cropImage(shot, STATE.captureRegion);
   STATE.images.push(cropped);
@@ -58,7 +68,7 @@ async function runCapture(tabId) {
   chrome.runtime.sendMessage({ type: 'status', status: 'running' });
   while (STATE.capturing) {
     const ok = await captureStep(tabId);
-    if (!ok) {
+    if (!ok || !STATE.capturing) {
       break;
     }
   }
@@ -70,12 +80,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'saveSelection') {
     STATE.captureRegion = message.captureRegion;
     STATE.nextButtonRect = message.nextButtonRect;
+    STATE.devicePixelRatio = message.devicePixelRatio || 1;
     STATE.waitAfterClickMs = message.waitAfterClickMs ?? STATE.waitAfterClickMs;
     STATE.waitAfterScreenshotMs = message.waitAfterScreenshotMs ?? STATE.waitAfterScreenshotMs;
     STATE.images = [];
     chrome.storage.local.set({
       captureRegion: STATE.captureRegion,
       nextButtonRect: STATE.nextButtonRect,
+      devicePixelRatio: STATE.devicePixelRatio,
       waitAfterClickMs: STATE.waitAfterClickMs,
       waitAfterScreenshotMs: STATE.waitAfterScreenshotMs
     });
@@ -111,16 +123,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get([
       'captureRegion',
       'nextButtonRect',
+      'devicePixelRatio',
       'waitAfterClickMs',
       'waitAfterScreenshotMs'
     ]).then((data) => {
       STATE.captureRegion = data.captureRegion || STATE.captureRegion;
       STATE.nextButtonRect = data.nextButtonRect || STATE.nextButtonRect;
+      STATE.devicePixelRatio = data.devicePixelRatio || STATE.devicePixelRatio;
       STATE.waitAfterClickMs = data.waitAfterClickMs ?? STATE.waitAfterClickMs;
       STATE.waitAfterScreenshotMs = data.waitAfterScreenshotMs ?? STATE.waitAfterScreenshotMs;
       sendResponse({
         captureRegion: STATE.captureRegion,
         nextButtonRect: STATE.nextButtonRect,
+        devicePixelRatio: STATE.devicePixelRatio,
         waitAfterClickMs: STATE.waitAfterClickMs,
         waitAfterScreenshotMs: STATE.waitAfterScreenshotMs,
         capturing: STATE.capturing,

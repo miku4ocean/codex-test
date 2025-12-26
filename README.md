@@ -21,3 +21,4 @@ The `extension/` folder contains a Manifest V3 Chrome extension that automates s
 - Keep the slide tab visible during capture; `captureVisibleTab` only records the current viewport.
 - If the next-button click fails (element missing), capture stops automatically.
 - Captured images are kept in memory only; stopping clears them after export.
+- Coordinates are scaled using the page's device pixel ratio so selections remain accurate on HiDPI/Retina displays.

@@ -96,7 +96,7 @@ function selectRegion(color) {
 async function selectAreas() {
   const captureRegion = await selectRegion(SELECTION_COLORS.capture);
   const nextButtonRect = await selectRegion(SELECTION_COLORS.next);
-  return { captureRegion, nextButtonRect };
+  return { captureRegion, nextButtonRect, devicePixelRatio: window.devicePixelRatio || 1 };
 }
 
 function performClick(rect) {
